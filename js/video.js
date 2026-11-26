@@ -6,36 +6,48 @@
     if (!video || !notice || !closing || !replay) return;
 
     const mediaUrl = '../assets/maira-edit.mp4';
-    const mediaAvailable = false;
 
     function showMissingMedia() {
         video.pause();
         video.removeAttribute('src');
         video.load();
         video.hidden = true;
+        notice.textContent = 'The finished birthday edit is not available yet. Add the approved file at assets/maira-edit.mp4 to enable playback.';
         notice.hidden = false;
         closing.hidden = true;
         replay.hidden = true;
     }
 
-    if (!mediaAvailable) return;
+    video.addEventListener('loadedmetadata', function () {
+        video.hidden = false;
+        notice.hidden = true;
+    }, { once: true });
 
-    video.src = mediaUrl;
-    video.hidden = false;
-    notice.hidden = true;
-    video.load();
+    video.addEventListener('error', showMissingMedia, { once: true });
 
     video.addEventListener('play', function () {
         if (document.fullscreenElement || typeof video.requestFullscreen !== 'function') return;
-        video.requestFullscreen().catch(function () {});
+        try {
+            const fullscreenRequest = video.requestFullscreen();
+            if (fullscreenRequest && typeof fullscreenRequest.catch === 'function') {
+                fullscreenRequest.catch(function () {});
+            }
+        } catch (error) {
+            // Embedded playback remains available when fullscreen is restricted.
+        }
     });
 
-    video.addEventListener('ended', function () {
+    video.addEventListener('ended', async function () {
+        if (document.fullscreenElement === video && typeof document.exitFullscreen === 'function') {
+            try {
+                await document.exitFullscreen();
+            } catch (error) {
+                // Keep the ending controls available if fullscreen cannot be exited.
+            }
+        }
         closing.hidden = false;
         replay.hidden = false;
     });
-
-    video.addEventListener('error', showMissingMedia);
 
     replay.addEventListener('click', function () {
         closing.hidden = true;
@@ -45,4 +57,7 @@
             replay.hidden = false;
         });
     });
+
+    video.src = mediaUrl;
+    video.load();
 })();

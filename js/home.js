@@ -25,12 +25,11 @@
     const birthdayStart = new Date('2005-11-29T00:00:00+05:00');
     const app = window.birthdayApp;
     let started = false;
-    let codeComplete = false;
     let cakeAnimationComplete = false;
     let flowerStartTimer = null;
 
     function revealMoreLinkWhenReady() {
-        if (!codeComplete || !cakeAnimationComplete) return;
+        if (!cakeAnimationComplete || moreLink.classList.contains('is-ready')) return;
         moreLink.classList.add('is-ready');
         moreLink.removeAttribute('aria-disabled');
         moreLink.removeAttribute('tabindex');
@@ -42,10 +41,7 @@
 
         if (app) {
             app.startCounter(birthdayStart);
-            app.typewriter(code, function () {
-                codeComplete = true;
-                revealMoreLinkWhenReady();
-            });
+            app.typewriter(code);
 
             flowerStartTimer = window.setTimeout(function () {
                 app.startHeartAnimation(function () {
