@@ -5,19 +5,41 @@
     const moreLink = document.getElementById('thereIsMore');
     const confettiLayer = document.getElementById('confetti');
 
-    if (confettiLayer) {
+    function burstConfetti(durationScale = 1, delayScale = 1) {
+        if (!confettiLayer) return;
+
         const confettiColors = ['#E98E86', '#E6B45C', '#C7829B', '#789D7C', '#8EA9B7'];
         for (let index = 0; index < 26; index++) {
+            const pair = Math.floor(index / 2);
+            const fromLeft = index % 2 === 0;
+            const duration = (2300 + (pair % 4) * 120) * durationScale;
+            const delay = (pair % 7) * 65 * delayScale;
             const piece = document.createElement('span');
             piece.className = 'confetti-piece';
-            piece.style.setProperty('--x', ((index * 37 + 11) % 100) + '%');
-            piece.style.setProperty('--drift', (((index * 29) % 150) - 75) + 'px');
+            piece.style.setProperty('--start-x', fromLeft ? '-5px' : 'calc(100% - 2px)');
+            piece.style.setProperty('--start-y', ((index * 23) % 38) + '%');
+            piece.style.setProperty('--drift', ((fromLeft ? 1 : -1) * (24 + (index * 17) % 32)) + 'px');
+            piece.style.setProperty('--fall', (95 + (index % 4) * 5) + 'vh');
             piece.style.setProperty('--spin', ((index % 2 ? 1 : -1) * (220 + (index % 5) * 75)) + 'deg');
-            piece.style.setProperty('--delay', ((index % 7) * 65) + 'ms');
-            piece.style.setProperty('--duration', (2300 + (index % 4) * 120) + 'ms');
+            piece.style.setProperty('--delay', delay + 'ms');
+            piece.style.setProperty('--duration', duration + 'ms');
             piece.style.setProperty('--color', confettiColors[index % confettiColors.length]);
+
+            let cleanupTimer = null;
+            const removePiece = function () {
+                if (cleanupTimer !== null) window.clearTimeout(cleanupTimer);
+                piece.remove();
+            };
+            piece.addEventListener('animationend', removePiece, { once: true });
+            cleanupTimer = window.setTimeout(removePiece, duration + delay + 150);
             confettiLayer.appendChild(piece);
         }
+    }
+
+    if (confettiLayer) {
+        if (welcome) welcome.before(confettiLayer);
+        window.birthdayConfettiBurst = function () { burstConfetti(); };
+        burstConfetti(5 / 3, 5 / 3);
     }
 
     if (!welcome || !main || !code || !moreLink) return;

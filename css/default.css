@@ -47,30 +47,31 @@ body {
     place-items: center;
     padding: 24px;
     overflow: hidden;
-    background: #FFDEAD;
+    background: transparent;
     color: #302820;
     font-family: Consolas, Monaco, 'Bitstream Vera Sans Mono', 'Courier New', monospace;
     text-align: center;
-    animation: welcome-sequence 3s ease-in-out forwards;
+    animation: welcome-sequence 5s ease-in-out forwards;
 }
 
 #confetti {
-    position: absolute;
+    position: fixed;
     inset: 0;
+    z-index: 0;
     overflow: hidden;
     pointer-events: none;
 }
 
 .confetti-piece {
     position: absolute;
-    top: -10%;
-    left: var(--x);
+    top: var(--start-y);
+    left: var(--start-x);
     width: 7px;
     height: 12px;
     border-radius: 2px 5px 2px 5px;
     background: var(--color);
     opacity: 0;
-    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(0deg);
     animation: confetti-fall var(--duration) cubic-bezier(.34, .07, .63, .95) var(--delay) both;
     will-change: transform, opacity;
 }
@@ -102,7 +103,7 @@ body {
     font-weight: 600;
     letter-spacing: .22em;
     opacity: 0;
-    animation: welcome-detail 2.8s ease-out forwards;
+    animation: welcome-detail 4.6667s ease-out forwards;
 }
 
 .welcome-title {
@@ -116,7 +117,7 @@ body {
     text-shadow: 0 2px 0 rgba(255, 255, 255, .28);
     opacity: 0;
     transform: translateY(12px) scale(.98);
-    animation: welcome-title 2.8s cubic-bezier(.2, .7, .25, 1) forwards;
+    animation: welcome-title 4.6667s cubic-bezier(.2, .7, .25, 1) forwards;
 }
 
 .welcome-sparkle {
@@ -124,7 +125,7 @@ body {
     font-size: clamp(17px, 2vw, 23px);
     letter-spacing: .08em;
     opacity: 0;
-    animation: welcome-detail 2.8s ease-out forwards;
+    animation: welcome-detail 4.6667s ease-out forwards;
 }
 
 @keyframes welcome-sequence {
@@ -145,13 +146,15 @@ body {
 }
 
 @keyframes confetti-fall {
-    0% { opacity: 0; transform: translate3d(0, -10vh, 0) rotate(0deg); }
+    0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(0deg); }
     12% { opacity: .78; }
     83% { opacity: .74; }
-    100% { opacity: 0; transform: translate3d(var(--drift), 115vh, 0) rotate(var(--spin)); }
+    100% { opacity: 0; transform: translate3d(var(--drift), var(--fall), 0) rotate(var(--spin)); }
 }
 
 .home-page {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
     min-height: 100svh;

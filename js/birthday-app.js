@@ -243,7 +243,10 @@ class BirthdayApp {
 
         state.onClick = (event) => {
             if (event.button !== 0) return;
+            const activeState = this.typingState;
+            if (!activeState || activeState.completed || activeState.lineIndex >= activeState.lines.length) return;
             this.completeCurrentLine();
+            if (typeof window.birthdayConfettiBurst === "function") window.birthdayConfettiBurst();
         };
         state.onKeyDown = (event) => {
             const focused = document.activeElement;
