@@ -599,6 +599,30 @@ body {
     }
 }
 
+@media (max-height: 500px) and (orientation: landscape) {
+    body.video-page .document-page {
+        padding-top: calc(8px + var(--safe-area-top));
+        padding-bottom: calc(8px + var(--safe-area-bottom));
+    }
+
+    body.video-page .page-content {
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    body.video-page .video-subheading {
+        margin: 4px 0 8px;
+    }
+
+    body.video-page .video-player {
+        max-height: 45svh;
+    }
+
+    body.video-page .video-actions {
+        margin-top: 8px;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         scroll-behavior: auto !important;
