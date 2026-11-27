@@ -4,7 +4,7 @@ A small static website for Maira's birthday. It uses the existing canvas flower 
 
 ## Pages
 
-- `/` — three-second welcome, animated birthday code, flower cake, and Pakistan-time birthday counter.
+- `/` — five-second welcome, animated birthday code, flower cake, and Pakistan-time birthday counter.
 - `/note/` — the complete birthday letter.
 - `/surprise/` — the video introduction and 10-second countdown.
 - `/video/` — the video player, closing message, replay control, and return link.
@@ -23,7 +23,11 @@ Then open `http://localhost:8000/` in a browser. Direct route refreshes work fro
 
 ## Video file
 
-The finished edit was not present when this project was prepared. The page shows a clear missing-media message and keeps the player and replay control unavailable. When the MP4 is supplied at `assets/maira-edit.mp4`, set `mediaAvailable` to `true` in `js/video.js` to enable the player.
+The finished edit is present at `assets/maira-edit.mp4`. The video page loads it automatically, with manual playback, fullscreen where supported, an ending message, and a replay control after playback.
+
+## Private deployment
+
+Production uses Cloudflare Pages with server-side secret-link protection. Opening the private link establishes a signed browser session; protected pages and assets require that session. Never commit the private link or its secret values to this repository.
 
 ## Existing assets
 
