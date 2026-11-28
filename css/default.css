@@ -31,6 +31,15 @@ html {
     min-width: 0;
     min-height: 100%;
     background: var(--background);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 body {
@@ -41,6 +50,8 @@ body {
     overflow-x: hidden;
     background: var(--background);
     color: var(--main-text);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 #welcome {
@@ -135,7 +146,7 @@ body {
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
     min-height: 100svh;
-    padding: calc(20px + var(--safe-area-top)) calc(clamp(18px, 3vw, 48px) + var(--safe-area-right)) calc(10px + var(--safe-area-bottom)) calc(clamp(18px, 3vw, 48px) + var(--safe-area-left));
+    padding: calc(20px + var(--safe-area-top)) calc(clamp(18px, 3vw, 48px) + var(--safe-area-right)) calc(7px + var(--safe-area-bottom)) calc(clamp(18px, 3vw, 48px) + var(--safe-area-left));
     opacity: 0;
     visibility: hidden;
     transition: opacity 700ms ease, visibility 700ms step-end;
@@ -153,8 +164,8 @@ body {
     align-items: center;
     gap: clamp(24px, 3vw, 46px);
     width: min(100%, 1580px);
-    min-height: calc(100svh - 62px);
-    margin: auto;
+    min-height: calc(100svh - 80px);
+    margin: 0 auto;
 }
 
 .code-panel {
@@ -491,6 +502,16 @@ body {
 
 .video-actions .text-button {
     font-size: 14px;
+}
+
+@media (min-width: 700px) {
+    body.video-page .document-page {
+        padding-block: clamp(16px, 3.5svh, 42px);
+    }
+
+    body.video-page .video-player {
+        max-height: min(65svh, calc(100svh - 360px));
+    }
 }
 
 @media (max-width: 1100px) {

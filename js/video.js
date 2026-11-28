@@ -25,6 +25,10 @@
 
     video.addEventListener('error', showMissingMedia, { once: true });
 
+    window.addEventListener('pagehide', function () {
+        video.pause();
+    }, { once: true });
+
     video.addEventListener('play', function () {
         if (document.fullscreenElement || typeof video.requestFullscreen !== 'function') return;
         try {
@@ -59,5 +63,4 @@
     });
 
     video.src = mediaUrl;
-    video.load();
 })();

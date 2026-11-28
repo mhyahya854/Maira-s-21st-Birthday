@@ -12,6 +12,7 @@
     let confettiScale = 1;
     let confettiParticles = [];
     let confettiFrame = null;
+    const MAX_CONFETTI_PARTICLES = 1040;
 
     function cubicBezierY(progress) {
         let low = 0;
@@ -68,6 +69,15 @@
         confettiContext.setTransform(confettiScale, 0, 0, confettiScale, 0, 0);
     }
 
+    function confettiFlightDuration(piece) {
+        const launchSpeed = -piece.initialVelocityY;
+        const distanceToExit = Math.max(1, 32 - piece.bottomOffset);
+        const secondsUntilExit = (launchSpeed + Math.sqrt(
+            launchSpeed * launchSpeed + 2 * piece.gravity * distanceToExit
+        )) / piece.gravity;
+        return secondsUntilExit * piece.durationScale * 1000;
+    }
+
     function renderConfetti(now) {
         confettiFrame = null;
         confettiContext.clearRect(0, 0, confettiWidth, confettiHeight);
@@ -76,22 +86,31 @@
         for (let index = 0; index < confettiParticles.length; index++) {
             const piece = confettiParticles[index];
             const elapsed = now - piece.start - piece.delay;
+            if (elapsed < 0) {
+                confettiParticles[activeCount++] = piece;
+                continue;
+            }
             if (elapsed >= piece.duration) continue;
 
-            confettiParticles[activeCount++] = piece;
-            if (elapsed < 0) continue;
+            const progress = elapsed / piece.duration;
+            const simulationSeconds = elapsed / 1000 / piece.durationScale;
+            const scaleX = confettiWidth / piece.viewportWidth;
+            const scaleY = confettiHeight / piece.viewportHeight;
+            const x = (piece.fromLeft ? 0 : confettiWidth) +
+                piece.initialVelocityX * simulationSeconds * scaleX +
+                Math.sin(simulationSeconds * 2.2 + piece.phase) * piece.drift * scaleX;
+            const y = confettiHeight + piece.bottomOffset * scaleY +
+                piece.initialVelocityY * simulationSeconds * scaleY +
+                0.5 * piece.gravity * simulationSeconds * simulationSeconds * scaleY;
+            if (y > confettiHeight + 32 || x < -24 || x > confettiWidth + 24) continue;
 
-            const progress = Math.min(elapsed / piece.duration, 1);
-            const eased = easeConfetti(progress);
-            const x = (piece.fromLeft ? -5 : confettiWidth - 2) + piece.drift * eased;
-            const y = confettiHeight * piece.startY + confettiHeight * piece.fallRatio * eased;
-            if (y > confettiHeight + 20 || x < -20 || x > confettiWidth + 20) continue;
+            confettiParticles[activeCount++] = piece;
 
             confettiContext.save();
             confettiContext.globalAlpha = confettiOpacity(progress);
             confettiContext.fillStyle = piece.color;
             confettiContext.translate(x, y);
-            confettiContext.rotate(piece.spin * eased * Math.PI / 180);
+            confettiContext.rotate(piece.spin * simulationSeconds * Math.PI / 180);
 
             if (piece.shape === 'circle') {
                 confettiContext.beginPath();
@@ -121,24 +140,34 @@
 
         const confettiColors = ['#E98E86', '#E6B45C', '#C7829B', '#789D7C', '#8EA9B7'];
         const start = performance.now();
-        for (let index = 0; index < 26; index++) {
+        for (let index = 0; index < 26 && confettiParticles.length < MAX_CONFETTI_PARTICLES; index++) {
             const pair = Math.floor(index / 2);
             const fromLeft = index % 2 === 0;
             const sequence = index + 1;
-            confettiParticles.push({
+            const gravity = confettiHeight * (0.72 + Math.random() * 0.3);
+            const targetRise = confettiHeight * (0.28 + Math.random() * 0.42);
+            const bottomOffset = Math.random() * 8;
+            const piece = {
                 fromLeft,
                 start,
-                startY: ((index * 23) % 38) / 100,
-                fallRatio: 0.95 + (index % 4) * 0.05,
-                drift: (fromLeft ? 1 : -1) * (24 + (index * 17) % 32),
-                spin: (index % 2 ? 1 : -1) * (220 + (index % 5) * 75),
+                viewportWidth: confettiWidth,
+                viewportHeight: confettiHeight,
+                bottomOffset,
+                initialVelocityX: (fromLeft ? 1 : -1) * confettiWidth * (0.1 + Math.random() * 0.16),
+                initialVelocityY: -Math.sqrt(2 * gravity * targetRise),
+                gravity,
+                drift: confettiWidth * (0.012 + Math.random() * 0.025),
+                phase: Math.random() * Math.PI * 2,
+                spin: (Math.random() < 0.5 ? -1 : 1) * (220 + Math.random() * 300),
                 delay: (pair % 7) * 65 * delayScale,
-                duration: (2300 + (pair % 4) * 120) * durationScale,
+                durationScale,
                 width: sequence % 4 === 0 ? 5 : sequence % 3 === 0 ? 6 : 7,
                 height: sequence % 4 === 0 ? 15 : sequence % 3 === 0 ? 6 : 12,
                 shape: sequence % 4 === 0 ? 'long' : sequence % 3 === 0 ? 'circle' : 'piece',
                 color: confettiColors[index % confettiColors.length]
-            });
+            };
+            piece.duration = confettiFlightDuration(piece);
+            confettiParticles.push(piece);
         }
 
         if (confettiFrame === null) confettiFrame = window.requestAnimationFrame(renderConfetti);
