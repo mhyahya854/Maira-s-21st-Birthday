@@ -3,18 +3,77 @@ const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 const SECRET_PATTERN = /^[a-f0-9]{64}$/;
 const encoder = new TextEncoder();
 
-function withPrivacyHeaders(response) {
+function withPrivacyHeaders(response, acceptRanges = false) {
     const headers = new Headers(response.headers);
     headers.set("Cache-Control", "private, no-store");
     headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
     headers.set("Referrer-Policy", "no-referrer");
     headers.set("X-Content-Type-Options", "nosniff");
+    if (acceptRanges) headers.set("Accept-Ranges", "bytes");
 
     return new Response(response.body, {
         status: response.status,
         statusText: response.statusText,
         headers
     });
+}
+
+function parseByteRange(header, totalLength) {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+    if (!match || (!match[1] && !match[2]) || totalLength <= 0) return null;
+
+    if (!match[1]) {
+        const suffixLength = Number(match[2]);
+        if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0) return null;
+        return {
+            start: Math.max(totalLength - suffixLength, 0),
+            end: totalLength - 1
+        };
+    }
+
+    const start = Number(match[1]);
+    const requestedEnd = match[2] ? Number(match[2]) : totalLength - 1;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(requestedEnd)) return null;
+    if (start >= totalLength || requestedEnd < start) return null;
+
+    return {
+        start,
+        end: Math.min(requestedEnd, totalLength - 1)
+    };
+}
+
+async function withVideoRangeSupport(request, response) {
+    const rangeHeader = request.headers.get("Range");
+    if (!rangeHeader || request.method !== "GET" || response.status !== 200) {
+        return withPrivacyHeaders(response, true);
+    }
+
+    const ifRange = request.headers.get("If-Range");
+    if (ifRange) {
+        const etag = response.headers.get("ETag");
+        const lastModified = response.headers.get("Last-Modified");
+        const matchesStrongEtag = etag && !etag.startsWith("W/") && ifRange === etag;
+        if (!matchesStrongEtag && ifRange !== lastModified) {
+            return withPrivacyHeaders(response, true);
+        }
+    }
+
+    const file = await response.arrayBuffer();
+    const totalLength = file.byteLength;
+    const range = parseByteRange(rangeHeader, totalLength);
+    const headers = new Headers(response.headers);
+    headers.set("Accept-Ranges", "bytes");
+
+    if (!range) {
+        headers.set("Content-Range", `bytes */${totalLength}`);
+        headers.set("Content-Length", "0");
+        return withPrivacyHeaders(new Response(null, { status: 416, headers }), true);
+    }
+
+    const partial = file.slice(range.start, range.end + 1);
+    headers.set("Content-Range", `bytes ${range.start}-${range.end}/${totalLength}`);
+    headers.set("Content-Length", String(partial.byteLength));
+    return withPrivacyHeaders(new Response(partial, { status: 206, headers }), true);
 }
 
 function notFound() {
@@ -138,7 +197,12 @@ export async function onRequest(context) {
         }
 
         if (!await hasValidSession(request, env, hostname)) return notFound();
-        return withPrivacyHeaders(await context.next());
+
+        const response = await context.next();
+        if (url.pathname === "/assets/maira-edit.mp4") {
+            return await withVideoRangeSupport(request, response);
+        }
+        return withPrivacyHeaders(response);
     } catch {
         return notFound();
     }
