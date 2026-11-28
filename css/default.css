@@ -522,8 +522,11 @@ body {
     }
 
     #messages {
-        right: 12%;
-        left: 12%;
+        top: 35%;
+        right: auto;
+        left: 50%;
+        width: min(90vw, 670px);
+        transform: translateX(-50%);
     }
 
     .counter-heading {
@@ -606,9 +609,11 @@ body {
     }
 
     #messages {
-        right: 10%;
-        left: 10%;
-        top: 45%;
+        top: 35%;
+        right: auto;
+        left: 50%;
+        width: min(90vw, 670px);
+        transform: translateX(-50%);
     }
 
     #elapseClock {
