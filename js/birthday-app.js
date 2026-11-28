@@ -46,22 +46,7 @@ class BirthdayApp {
             this.ctx = this.canvas.getContext("2d");
             this.ctx.globalCompositeOperation = "lighter";
             this.garden = new Garden(this.ctx, this.canvas);
-
-            this.adjustContentPosition();
-            window.addEventListener("resize", () => this.adjustContentPosition());
         }
-    }
-
-    adjustContentPosition() {
-        const content = document.getElementById("content");
-        if (!content) return;
-
-        if (window.matchMedia("(max-width: 1149px), (max-height: 600px)").matches) {
-            content.style.marginTop = "";
-            return;
-        }
-
-        content.style.marginTop = Math.max((window.innerHeight - content.offsetHeight) / 2, 10) + "px";
     }
 
     startGardenRenderLoop() {
@@ -237,10 +222,6 @@ class BirthdayApp {
             onComplete,
             completed: false,
             onClick: null,
-            onKeyDown: null,
-            onManualScroll: null,
-            mobileFollowPaused: false,
-            lastAutoFollowLine: -1
         };
         this.typingState = state;
 
@@ -251,24 +232,7 @@ class BirthdayApp {
             this.completeCurrentLine();
             if (typeof window.birthdayConfettiBurst === "function") window.birthdayConfettiBurst();
         };
-        state.onKeyDown = (event) => {
-            const focused = document.activeElement;
-            if (!(focused === element || element.contains(focused))) return;
-            if (focused && focused.matches && focused.matches("button, input, select, textarea, a, [contenteditable='true']")) return;
-            if ((event.key === "Enter" || event.code === "Space") && !event.repeat) {
-                event.preventDefault();
-                this.completeCurrentLine();
-            }
-        };
         element.addEventListener("click", state.onClick);
-        document.addEventListener("keydown", state.onKeyDown);
-        if (!sequentialPresentation) {
-            state.onManualScroll = () => {
-                state.mobileFollowPaused = true;
-            };
-            window.addEventListener("wheel", state.onManualScroll, { passive: true });
-            window.addEventListener("touchmove", state.onManualScroll, { passive: true });
-        }
 
         this.startCurrentLine(state);
     }
@@ -314,7 +278,7 @@ class BirthdayApp {
 
         const sequentialPresentation = main.dataset.presentation === "sequence";
         if (sequentialPresentation && main.dataset.stage !== "code") return;
-        if (!sequentialPresentation && !window.matchMedia("(max-width: 1100px), (max-height: 600px)").matches) return;
+        if (!sequentialPresentation) return;
 
         const line = state.lines[state.lineIndex];
         if (!line) return;
@@ -331,25 +295,13 @@ class BirthdayApp {
             return;
         }
 
-        if (state.mobileFollowPaused) {
-            if (window.scrollY > 24) return;
-            state.mobileFollowPaused = false;
-        }
-
-        if (state.lastAutoFollowLine === state.lineIndex || (state.charIndex > 0 && state.charIndex % 12 !== 0)) return;
-
-        const viewportHeight = Math.min(window.innerHeight, window.visualViewport ? window.visualViewport.height : window.innerHeight);
-        const codeRect = state.element.getBoundingClientRect();
-        if (codeRect.bottom <= 0 || codeRect.top >= viewportHeight) return;
-
         const lineRect = line.getBoundingClientRect();
-        const safeBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--safe-area-bottom")) || 0;
-        const lowerEdge = viewportHeight - Math.max(24, safeBottom + 12);
-        if (lineRect.bottom > lowerEdge && state.lastAutoFollowLine !== state.lineIndex) {
-            state.lastAutoFollowLine = state.lineIndex;
-            const targetBottom = Math.min(viewportHeight * 0.7, lowerEdge - 20);
-            const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-            window.scrollBy({ top: lineRect.bottom - targetBottom, behavior });
+        const containerRect = state.element.getBoundingClientRect();
+        const inset = 10;
+        if (lineRect.top < containerRect.top + inset) {
+            state.element.scrollTop -= containerRect.top + inset - lineRect.top;
+        } else if (lineRect.bottom > containerRect.bottom - inset) {
+            state.element.scrollTop += lineRect.bottom - containerRect.bottom + inset;
         }
     }
 
@@ -377,11 +329,6 @@ class BirthdayApp {
         if (state.timer) clearInterval(state.timer);
         state.cursor.remove();
         state.element.removeEventListener("click", state.onClick);
-        document.removeEventListener("keydown", state.onKeyDown);
-        if (state.onManualScroll) {
-            window.removeEventListener("wheel", state.onManualScroll);
-            window.removeEventListener("touchmove", state.onManualScroll);
-        }
         if (typeof state.onComplete === "function") state.onComplete();
     }
 

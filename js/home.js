@@ -12,7 +12,7 @@
     let confettiScale = 1;
     let confettiParticles = [];
     let confettiFrame = null;
-    const MAX_CONFETTI_PARTICLES = 1040;
+    const MAX_CONFETTI_PARTICLES = 2080;
 
     function cubicBezierY(progress) {
         let low = 0;
@@ -140,7 +140,7 @@
 
         const confettiColors = ['#E98E86', '#E6B45C', '#C7829B', '#789D7C', '#8EA9B7'];
         const start = performance.now();
-        for (let index = 0; index < 26 && confettiParticles.length < MAX_CONFETTI_PARTICLES; index++) {
+        for (let index = 0; index < 52 && confettiParticles.length < MAX_CONFETTI_PARTICLES; index++) {
             const pair = Math.floor(index / 2);
             const fromLeft = index % 2 === 0;
             const sequence = index + 1;
