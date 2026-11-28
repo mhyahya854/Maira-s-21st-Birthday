@@ -771,6 +771,70 @@ body {
     }
 }
 
+@media (max-width: 600px) {
+    #loveHeart {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(120px, 36vw) minmax(0, 1fr);
+        grid-template-rows: auto;
+        align-items: center;
+        column-gap: clamp(6px, 2vw, 10px);
+        width: 100%;
+        max-width: 670px;
+        aspect-ratio: auto;
+    }
+
+    .cake-art {
+        position: relative;
+        inset: auto;
+        grid-column: 2;
+        grid-row: 1;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 670 / 625;
+    }
+
+    #messages {
+        position: static;
+        grid-column: 1;
+        grid-row: 1;
+        align-self: center;
+        width: 100%;
+        transform: none;
+    }
+
+    .counter-heading {
+        font-size: clamp(8px, 2.3vw, 10px);
+        line-height: 1.1;
+    }
+
+    #elapseClock {
+        margin-top: clamp(3px, .8vw, 5px);
+        column-gap: .12em;
+        line-height: 1.1;
+        font-size: clamp(8px, 2.3vw, 10px);
+    }
+
+    #elapseClock .digit {
+        font-size: clamp(10px, 3vw, 13px);
+    }
+
+    #thereIsMore {
+        position: static;
+        grid-column: 3;
+        grid-row: 1;
+        align-self: center;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        min-height: 44px;
+        padding: 6px 2px;
+        transform: none;
+        white-space: normal;
+        text-wrap: balance;
+        font-size: clamp(9px, 2.6vw, 12px);
+        line-height: 1.15;
+    }
+}
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         scroll-behavior: auto !important;
